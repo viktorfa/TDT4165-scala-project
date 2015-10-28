@@ -10,5 +10,5 @@ object Main extends App {
     }
   
   // Write a few transaction examples using Threads
-  
+
 }
