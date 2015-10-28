@@ -1,6 +1,8 @@
 import exceptions.IllegalAmountException
 import exceptions.NoSufficientFundsException
 
+import scala.annotation.tailrec
+
 object Bank {
   
   private var idCounter: Int = 0
@@ -12,9 +14,10 @@ object Bank {
       to.deposit(amount)
     }
   }
-  
-  def getUniqueId: Int = {
+  // TODO make this thread safe
+  @tailrec def getUniqueId: Int = {
     idCounter += 1
     idCounter
+    getUniqueId
   }
 }
