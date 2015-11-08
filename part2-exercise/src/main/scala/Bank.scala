@@ -13,7 +13,12 @@ class Bank(val allowedAttempts: Integer = 3) {
       transactionsQueue, processedTransactions, from, to, amount, allowedAttempts)
   }
   
-  def generateAccountId: Int = ???
+  def generateAccountId: Int = this.synchronized{
+
+    uid = uid+1;
+    uid
+
+  }
 
   private def processTransactions: Unit = ???
 
