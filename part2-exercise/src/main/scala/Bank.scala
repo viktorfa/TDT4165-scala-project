@@ -1,3 +1,4 @@
+import scala.concurrent.ExecutionContext
 import scala.concurrent.forkjoin.ForkJoinPool
 
 class Bank(val allowedAttempts: Integer = 3) {
@@ -5,7 +6,7 @@ class Bank(val allowedAttempts: Integer = 3) {
   private val uid = ???
   private val transactionsQueue: TransactionQueue = new TransactionQueue()
   private val processedTransactions: TransactionQueue = new TransactionQueue()
-  private val executorContext = ???
+  private val executorContext = ExecutionContext.global
 
   def addTransactionToQueue(from: Account, to: Account, amount: Double): Unit = {
     transactionsQueue push new Transaction(
