@@ -88,6 +88,10 @@ class Account(val accountId: String, val bankId: String, val initialBalance: Dou
     case TransactionRequestReceipt(to, transactionId, transaction) => {
       // Process receipt
       transaction.receiptReceived = true
+      if (transaction.status == TransactionStatus.FAILED) {
+        // This is what happens when the transaction failed due to wrong bank - or account number
+        deposit(transaction.amount)
+      }
       transactions += transactionId -> transaction
     }
 

@@ -23,13 +23,21 @@ class Bank(val bankId: String) extends Actor {
   def findAccount(accountId: String): Option[ActorRef] = {
     // Use BankManager to look up an account with ID accountId
     // An option is either None or the type it is supposed to be, here we just cast it
-    Option[ActorRef](BankManager.findAccount(this.bankId, accountId))
+    try {
+      Option[ActorRef](BankManager.findAccount(this.bankId, accountId))
+    } catch {
+      case _: NoSuchElementException => None
+    }
   }
 
   def findOtherBank(bankId: String): Option[ActorRef] = {
     // Use BankManager to look up a different bank with ID bankId
     // An option is either None or the type it is supposed to be, here we just cast it
-    Option[ActorRef](BankManager.findBank(bankId))
+    try {
+      Option[ActorRef](BankManager.findBank(bankId))
+    } catch {
+      case _: NoSuchElementException => None
+    }
   }
 
   override def receive = {
@@ -58,13 +66,29 @@ class Bank(val bankId: String) extends Actor {
     val toAccountId = if (isInternal) t.to else t.to.substring(4)
     val transactionStatus = t.status
 
-
     // This method should forward Transaction t to an account or another bank, depending on the "to"-address.
     // HINT: Make use of the variables that have been defined above.
-    if (isInternal || isFromExternal) { // This is where we treat an external transaction as an internal
-      findAccount(toAccountId).get ! t
+    if (isInternal || isFromExternal) {
+      // This is where we treat an external transaction as an internal
+      val toAccount: Option[ActorRef] = findAccount(toAccountId)
+      if (toAccount.isDefined) {
+        toAccount.get ! t
+      } else {
+        t.status = TransactionStatus.FAILED
+        if (isInternal) {
+          findAccount(t.from.substring(4)).get ! new TransactionRequestReceipt(t.to, t.id, t)
+        } else {
+          findOtherBank(t.from.substring(0, 4)).get ! t
+        }
+      }
     } else {
-      findOtherBank(toBankId).get ! t
+      val toBank: Option[ActorRef] = findOtherBank(toBankId)
+      if (toBank.isDefined) {
+        toBank.get ! t
+      } else {
+        t.status = TransactionStatus.FAILED
+        findAccount(t.from.substring(4)).get ! new TransactionRequestReceipt(t.to, t.id, t)
+      }
     }
   }
 }
